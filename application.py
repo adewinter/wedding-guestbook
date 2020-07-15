@@ -10,6 +10,13 @@
 from flask import Flask, render_template, request, redirect, url_for
 import os, json, boto3
 
+from dotenv import load_dotenv
+load_dotenv()
+
+ACCESS_KEY = os.getenv('AWS_ACCESS_KEY_ID')
+SECRET_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+
+
 app = Flask(__name__)
 
 
@@ -49,24 +56,38 @@ def sign_s3():
   file_type = request.args.get('file-type')
 
   # Initialise the S3 client
-  s3 = boto3.client('s3')
+  s3 = boto3.client('s3',
+    aws_access_key_id=ACCESS_KEY,
+    aws_secret_access_key=SECRET_KEY)
 
   # Generate and return the presigned URL
   presigned_post = s3.generate_presigned_post(
     Bucket = S3_BUCKET,
     Key = file_name,
-    Fields = {"acl": "public-read", "Content-Type": file_type},
+    Fields = {
+      "Content-Type": file_type},
     Conditions = [
-      {"acl": "public-read"},
       {"Content-Type": file_type}
     ],
     ExpiresIn = 3600
   )
 
+  presigned_url = s3.generate_presigned_url(
+    ClientMethod = 'get_object',
+    Params = {
+      "Bucket": S3_BUCKET,
+      "Key": file_name,
+    },
+    ExpiresIn = 3600
+  )
+
+  print("the presigned url is: ", presigned_url)
+
   # Return the data to the client
   return json.dumps({
     'data': presigned_post,
-    'url': 'https://%s.s3.amazonaws.com/%s' % (S3_BUCKET, file_name)
+    'url': 'https://%s.s3.amazonaws.com/%s' % (S3_BUCKET, file_name),
+    'presigned_url': presigned_url
   })
 
 

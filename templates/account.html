@@ -27,6 +27,7 @@
 
     <script type="text/javascript">
 
+    window.presigned_url = null;
     /*
       Function to carry out the actual POST request to S3 using the signed request from the Python app.
     */
@@ -44,8 +45,8 @@
       xhr.onreadystatechange = () => {
         if(xhr.readyState === 4){
           if(xhr.status === 200 || xhr.status === 204){
-            document.getElementById('preview').src = url;
-            document.getElementById('avatar-url').value = url;
+            document.getElementById('preview').src = window.presigned_url;
+            document.getElementById('avatar-url').value = window.presigned_url;
           }
           else{
             alert('Could not upload file.');
@@ -67,6 +68,8 @@
         if(xhr.readyState === 4){
           if(xhr.status === 200){
             const response = JSON.parse(xhr.responseText);
+            window.presigned_url = response.presigned_url;
+            console.log("The presigned URL is:", window.presigned_url);
             uploadFile(file, response.data, response.url);
           }
           else{
