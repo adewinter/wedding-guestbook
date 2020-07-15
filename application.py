@@ -1,25 +1,20 @@
-####
-# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
-####
-
+import os
+import json
+import boto3
 
 from flask import Flask, render_template, request, redirect, url_for
-import os, json, boto3
+from dotenv import load_dotenv
+
 import dbops
 
-from dotenv import load_dotenv
 load_dotenv()
 
 ACCESS_KEY = os.getenv('AWS_ACCESS_KEY_ID')
 SECRET_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
 S3_BUCKET = os.getenv('S3_BUCKET')
 S3_CLIENT = boto3.client('s3',
-    aws_access_key_id=ACCESS_KEY,
-    aws_secret_access_key=SECRET_KEY)
+                         aws_access_key_id=ACCESS_KEY,
+                         aws_secret_access_key=SECRET_KEY)
 DATABSE_URL = os.getenv('DATABASE_URL')
 
 app = Flask(__name__)
@@ -30,11 +25,11 @@ app = Flask(__name__)
 def index():
     # Show the index HTML page:
     entries = dbops.get_all_entries()
-    return render_template('index.html')
+    return render_template('index.html', entries=entries)
 
 
 # Listen for POST requests to yourdomain.com/submit_form/
-@app.route("/submit-form/", methods = ["POST"])
+@app.route("/submit-form/", methods=["POST"])
 def submit_form():
     # Collect the data posted from the HTML form in account.html:
     name = request.form["name"]
@@ -42,10 +37,11 @@ def submit_form():
     s3_object_key = request.form["s3_object_key"]
 
     # Provide some procedure for storing the new details
-    update_account(name, full_name, s3_object_key)
+    dbops.insert_row(name, message, s3_object_key)
 
     # Redirect to the user's profile page, if appropriate
     return redirect(url_for('index'))
+
 
 def list_s3_objects():
     response = S3_CLIENT.list_objects_v2(
@@ -59,7 +55,7 @@ def list_s3_objects():
 def generate_presigned_urls_for_all_objects():
     s3_objects = list_s3_objects()
     s3_keys = [s3_object["Key"] for s3_object in s3_objects]
-    presigned_urls = [easy_generate_presigned_url(key) for key in s3_keys] #yes I could probably do something like nested list comprehensions but... no.
+    presigned_urls = [easy_generate_presigned_url(key) for key in s3_keys]
 
     print("here are only the keys", s3_keys)
     print("Here are the P urls", presigned_urls)
@@ -75,22 +71,17 @@ def get_s3_objects():
 
 def easy_generate_presigned_url(key):
     presigned_url = S3_CLIENT.generate_presigned_url(
-        ClientMethod = 'get_object',
-        Params = {
+        ClientMethod='get_object',
+        Params={
             "Bucket": S3_BUCKET,
             "Key": key,
         },
-        ExpiresIn = 3600
+        ExpiresIn=3600
     )
 
     return presigned_url
 
 
-
-# Listen for GET requests to yourdomain.com/sign_s3/
-#
-# Please see https://gist.github.com/RyanBalfanz/f07d827a4818fda0db81 for an example using
-# Python 3 for this view.
 @app.route('/sign-s3/')
 def sign_s3():
     # Load required data from the request
@@ -99,14 +90,14 @@ def sign_s3():
 
     # Generate and return the presigned URL
     presigned_post = S3_CLIENT.generate_presigned_post(
-        Bucket = S3_BUCKET,
-        Key = file_name,
-        Fields = {
+        Bucket=S3_BUCKET,
+        Key=file_name,
+        Fields={
             "Content-Type": file_type},
-        Conditions = [
+        Conditions=[
             {"Content-Type": file_type}
         ],
-        ExpiresIn = 3600
+        ExpiresIn=3600
     )
 
     presigned_url = easy_generate_presigned_url(file_name)
@@ -120,6 +111,7 @@ def sign_s3():
         'presigned_url': presigned_url
     })
 
+
 def startup_init():
     print("Doing initial setup tasks")
     dbops.create_table_if_needed()
@@ -131,4 +123,4 @@ startup_init()
 # Main code
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port = port)
+    app.run(host='0.0.0.0', port=port)

@@ -3,7 +3,8 @@ import os
 
 DATABASE_URL = os.getenv('DATABASE_URL')
 
-db_connection = pg.connect(DATABASE_URL) 
+db_connection = pg.connect(DATABASE_URL)
+
 
 def create_table_if_needed():
     with db_connection.cursor() as cursor:
@@ -23,13 +24,15 @@ def insert_row(name, message, s3_object_key):
     with db_connection.cursor() as cursor:
         insert_query = """
           INSERT INTO guestbook VALUES
-            (DEFAULT, DEFAULT, %(name)s, %(message)s, %(s3_object_key)s);   
+            (DEFAULT, DEFAULT, %(name)s, %(message)s, %(s3_object_key)s);
         """
-        cursor.execute(insert_query, {'name': name, 'message': message, 's3_object_key': s3_object_key})
-        
+        cursor.execute(insert_query, {'name': name, 'message': message,
+                                      's3_object_key': s3_object_key})
+
         result = cursor.statusmessage
-    
+
     return result
+
 
 def get_all_entries():
     with db_connection.cursor() as cursor:
@@ -38,5 +41,5 @@ def get_all_entries():
         """
         cursor.execute(select_query)
         result = cursor.fetchall()
-    
-    return result;
+
+    return result
