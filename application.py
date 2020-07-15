@@ -15,7 +15,10 @@ load_dotenv()
 
 ACCESS_KEY = os.getenv('AWS_ACCESS_KEY_ID')
 SECRET_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-
+S3_BUCKET = os.environ.get('S3_BUCKET')
+S3_CLIENT = boto3.client('s3',
+  aws_access_key_id=ACCESS_KEY,
+  aws_secret_access_key=SECRET_KEY)
 
 app = Flask(__name__)
 
@@ -41,6 +44,43 @@ def submit_form():
   # Redirect to the user's profile page, if appropriate
   return redirect(url_for('profile'))
 
+def list_s3_objects():
+  response = S3_CLIENT.list_objects_v2(
+    Bucket=S3_BUCKET,
+    # Prefix='string',
+  )
+
+  return response['Contents']
+
+
+def generate_presigned_urls_for_all_objects():
+  s3_objects = list_s3_objects()
+  s3_keys = [s3_object["Key"] for s3_object in s3_objects]
+  presigned_urls = [easy_generate_presigned_url(key) for key in s3_keys] #yes I could probably do something like nested list comprehensions but... no.
+
+  print("here are only the keys", s3_keys)
+  print("Here are the P urls", presigned_urls)
+
+
+@app.route('/get-s3-objects')
+def get_s3_objects():
+  generate_presigned_urls_for_all_objects()
+  return json.dumps(list_s3_objects(), indent=4, default=str)
+
+
+def easy_generate_presigned_url(key):
+  presigned_url = S3_CLIENT.generate_presigned_url(
+    ClientMethod = 'get_object',
+    Params = {
+      "Bucket": S3_BUCKET,
+      "Key": key,
+    },
+    ExpiresIn = 3600
+  )
+
+  return presigned_url
+
+
 
 # Listen for GET requests to yourdomain.com/sign_s3/
 #
@@ -48,20 +88,12 @@ def submit_form():
 # Python 3 for this view.
 @app.route('/sign-s3/')
 def sign_s3():
-  # Load necessary information into the application
-  S3_BUCKET = os.environ.get('S3_BUCKET')
-
   # Load required data from the request
   file_name = request.args.get('file-name')
   file_type = request.args.get('file-type')
 
-  # Initialise the S3 client
-  s3 = boto3.client('s3',
-    aws_access_key_id=ACCESS_KEY,
-    aws_secret_access_key=SECRET_KEY)
-
   # Generate and return the presigned URL
-  presigned_post = s3.generate_presigned_post(
+  presigned_post = S3_CLIENT.generate_presigned_post(
     Bucket = S3_BUCKET,
     Key = file_name,
     Fields = {
@@ -72,14 +104,7 @@ def sign_s3():
     ExpiresIn = 3600
   )
 
-  presigned_url = s3.generate_presigned_url(
-    ClientMethod = 'get_object',
-    Params = {
-      "Bucket": S3_BUCKET,
-      "Key": file_name,
-    },
-    ExpiresIn = 3600
-  )
+  presigned_url = easy_generate_presigned_url(file_name)
 
   print("the presigned url is: ", presigned_url)
 
