@@ -15,3 +15,4 @@ Werkzeug==1.0.1
 python-dotenv
 gunicorn
 psycopg2
+python-slugify

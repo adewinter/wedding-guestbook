@@ -1,9 +1,10 @@
 import psycopg2 as pg
+from psycopg2.extras import DictCursor
 import os
 
 DATABASE_URL = os.getenv('DATABASE_URL')
 
-db_connection = pg.connect(DATABASE_URL)
+db_connection = pg.connect(DATABASE_URL, cursor_factory=DictCursor)
 db_connection.set_session(autocommit=True)
 
 

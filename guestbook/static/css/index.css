@@ -1,0 +1,11 @@
+.entry.card {
+    margin-bottom: 10px;
+}
+
+.entry-name-header {
+    font-weight: bold;
+}
+
+.entry-name-value {
+    font-weight: normal;
+}

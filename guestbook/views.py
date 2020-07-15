@@ -1,19 +1,35 @@
 import os
 import json
+import uuid
 
 from flask import render_template, request, redirect, url_for, Blueprint
+from slugify import slugify
 
 from guestbook import dbops, S3_BUCKET, S3_CLIENT
 
 bp = Blueprint("guestbook", __name__)
 
+
 # Listen for GET requests to yourdomain.com/account/
 @bp.route("/")
 def index():
     # Show the index HTML page:
-    entries = dbops.get_all_entries()
+    raw_entries = [dict(entry) for entry in dbops.get_all_entries()]
+    entries = add_presigned_image_urls(raw_entries)
+    print("entries", entries)
     return render_template('index.html', entries=entries)
 
+
+def add_presigned_image_urls(entries):
+    for entry in entries:
+        entry['url'] = easy_generate_presigned_url(entry['s3_object_key'])
+    print("here are the entries", entries)
+    return entries
+
+def generate_s3_object_key_from_name(name):
+    folder = slugify(name)
+    filename = uuid.uuid1()
+    return f"${folder}/${filename}"
 
 # Listen for POST requests to yourdomain.com/submit_form/
 @bp.route("/submit-form/", methods=["POST"])
@@ -21,10 +37,14 @@ def submit_form():
     # Collect the data posted from the HTML form in account.html:
     name = request.form["name"]
     message = request.form["message"]
-    s3_object_key = request.form["s3_object_key"]
+    s3_object_key = generate_s3_object_key_from_name(name)
 
-    # Provide some procedure for storing the new details
+    filename = request.form["filename"]
+
+    # persist the important bits
     dbops.insert_row(name, message, s3_object_key)
+
+
 
     # Redirect to the user's profile page, if appropriate
     return redirect(url_for('index'))
