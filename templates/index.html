@@ -1,20 +1,25 @@
 <html>
   <body>
 
-    <h1>Edit your account</h1>
+    <h1>Guestbook</h1>
 
     <hr>
 
-    <h2>Welcome to Anton and Lauren's Wedding Guestbook!</h2>
 
-    <table>
-      <th>
-        <td>Here is a list of entries</td>
-      </th>
-      <tr>
-        <td>stuff...</td>
-      </tr>
-    </table>
+    <section class="content">
+      <header>
+        Welcome to Anton and Lauren's Wedding Guestbook!
+      </header>
+      <table>
+      {% for entry in entries %}
+        <tr class="entry">
+          <td class="entry-name">{{ entry.name }}</td>
+          <td class="entry-message">{{ entry.message }}</td>
+        </tr>
+      {% endfor %}
+      {% block content %}{% endblock %}
+    </section>
+
 
     <input type="file" id="file-input">
     <p id="status">Please select a file</p>

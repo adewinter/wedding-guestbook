@@ -9,76 +9,81 @@
 
 from flask import Flask, render_template, request, redirect, url_for
 import os, json, boto3
+import dbops
 
 from dotenv import load_dotenv
 load_dotenv()
 
 ACCESS_KEY = os.getenv('AWS_ACCESS_KEY_ID')
 SECRET_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-S3_BUCKET = os.environ.get('S3_BUCKET')
+S3_BUCKET = os.getenv('S3_BUCKET')
 S3_CLIENT = boto3.client('s3',
-  aws_access_key_id=ACCESS_KEY,
-  aws_secret_access_key=SECRET_KEY)
+    aws_access_key_id=ACCESS_KEY,
+    aws_secret_access_key=SECRET_KEY)
+DATABSE_URL = os.getenv('DATABASE_URL')
 
 app = Flask(__name__)
 
 
 # Listen for GET requests to yourdomain.com/account/
 @app.route("/")
-def account():
-  # Show the index HTML page:
-  return render_template('index.html')
+def index():
+    # Show the index HTML page:
+    entries = dbops.get_all_entries()
+    return render_template('index.html')
 
 
 # Listen for POST requests to yourdomain.com/submit_form/
 @app.route("/submit-form/", methods = ["POST"])
 def submit_form():
-  # Collect the data posted from the HTML form in account.html:
-  username = request.form["username"]
-  full_name = request.form["full-name"]
-  avatar_url = request.form["avatar-url"]
+    # Collect the data posted from the HTML form in account.html:
+    name = request.form["name"]
+    message = request.form["message"]
+    s3_object_key = request.form["s3_object_key"]
 
-  # Provide some procedure for storing the new details
-  update_account(username, full_name, avatar_url)
+    # Provide some procedure for storing the new details
+    update_account(name, full_name, s3_object_key)
 
-  # Redirect to the user's profile page, if appropriate
-  return redirect(url_for('profile'))
+    # Redirect to the user's profile page, if appropriate
+    return redirect(url_for('index'))
 
 def list_s3_objects():
-  response = S3_CLIENT.list_objects_v2(
-    Bucket=S3_BUCKET,
-    # Prefix='string',
-  )
+    response = S3_CLIENT.list_objects_v2(
+        Bucket=S3_BUCKET,
+        # Prefix='string',
+    )
 
-  return response['Contents']
+    return response['Contents']
 
 
 def generate_presigned_urls_for_all_objects():
-  s3_objects = list_s3_objects()
-  s3_keys = [s3_object["Key"] for s3_object in s3_objects]
-  presigned_urls = [easy_generate_presigned_url(key) for key in s3_keys] #yes I could probably do something like nested list comprehensions but... no.
+    s3_objects = list_s3_objects()
+    s3_keys = [s3_object["Key"] for s3_object in s3_objects]
+    presigned_urls = [easy_generate_presigned_url(key) for key in s3_keys] #yes I could probably do something like nested list comprehensions but... no.
 
-  print("here are only the keys", s3_keys)
-  print("Here are the P urls", presigned_urls)
+    print("here are only the keys", s3_keys)
+    print("Here are the P urls", presigned_urls)
+
+    return presigned_urls
 
 
 @app.route('/get-s3-objects')
 def get_s3_objects():
-  generate_presigned_urls_for_all_objects()
-  return json.dumps(list_s3_objects(), indent=4, default=str)
+    generate_presigned_urls_for_all_objects()
+    return json.dumps(list_s3_objects(), indent=4, default=str)
 
 
 def easy_generate_presigned_url(key):
-  presigned_url = S3_CLIENT.generate_presigned_url(
-    ClientMethod = 'get_object',
-    Params = {
-      "Bucket": S3_BUCKET,
-      "Key": key,
-    },
-    ExpiresIn = 3600
-  )
+    presigned_url = S3_CLIENT.generate_presigned_url(
+        ClientMethod = 'get_object',
+        Params = {
+            "Bucket": S3_BUCKET,
+            "Key": key,
+        },
+        ExpiresIn = 3600
+    )
 
-  return presigned_url
+    return presigned_url
 
 
 
@@ -88,35 +93,42 @@ def easy_generate_presigned_url(key):
 # Python 3 for this view.
 @app.route('/sign-s3/')
 def sign_s3():
-  # Load required data from the request
-  file_name = request.args.get('file-name')
-  file_type = request.args.get('file-type')
+    # Load required data from the request
+    file_name = request.args.get('file-name')
+    file_type = request.args.get('file-type')
 
-  # Generate and return the presigned URL
-  presigned_post = S3_CLIENT.generate_presigned_post(
-    Bucket = S3_BUCKET,
-    Key = file_name,
-    Fields = {
-      "Content-Type": file_type},
-    Conditions = [
-      {"Content-Type": file_type}
-    ],
-    ExpiresIn = 3600
-  )
+    # Generate and return the presigned URL
+    presigned_post = S3_CLIENT.generate_presigned_post(
+        Bucket = S3_BUCKET,
+        Key = file_name,
+        Fields = {
+            "Content-Type": file_type},
+        Conditions = [
+            {"Content-Type": file_type}
+        ],
+        ExpiresIn = 3600
+    )
 
-  presigned_url = easy_generate_presigned_url(file_name)
+    presigned_url = easy_generate_presigned_url(file_name)
 
-  print("the presigned url is: ", presigned_url)
+    print("the presigned url is: ", presigned_url)
 
-  # Return the data to the client
-  return json.dumps({
-    'data': presigned_post,
-    'url': 'https://%s.s3.amazonaws.com/%s' % (S3_BUCKET, file_name),
-    'presigned_url': presigned_url
-  })
+    # Return the data to the client
+    return json.dumps({
+        'data': presigned_post,
+        'url': 'https://%s.s3.amazonaws.com/%s' % (S3_BUCKET, file_name),
+        'presigned_url': presigned_url
+    })
+
+def startup_init():
+    print("Doing initial setup tasks")
+    dbops.create_table_if_needed()
+
+
+startup_init()
 
 
 # Main code
 if __name__ == '__main__':
-  port = int(os.environ.get('PORT', 5000))
-  app.run(host='0.0.0.0', port = port)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port = port)
