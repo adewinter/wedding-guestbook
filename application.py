@@ -21,10 +21,10 @@ app = Flask(__name__)
 
 
 # Listen for GET requests to yourdomain.com/account/
-@app.route("/account/")
+@app.route("/")
 def account():
-  # Show the account-edit HTML page:
-  return render_template('account.html')
+  # Show the index HTML page:
+  return render_template('index.html')
 
 
 # Listen for POST requests to yourdomain.com/submit_form/
