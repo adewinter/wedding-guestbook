@@ -54,6 +54,8 @@ def submit_form():
     return json.dumps({
         "person-name": person_name,
         "message": message,
+        "old_filename": filename,
+        "filetype": filetype,
         "s3_object_key": s3_object_key
     })
 
@@ -104,7 +106,7 @@ def sign_s3():
     file_type = request.args.get('file-type')
 
     # Generate and return the presigned URL
-    presigned_post = S3_CLIENT.generate_presigned_post(
+    presigned_post_data = S3_CLIENT.generate_presigned_post(
         Bucket=S3_BUCKET,
         Key=file_name,
         Fields={
@@ -119,8 +121,7 @@ def sign_s3():
 
     # Return the data to the client
     return json.dumps({
-        'data': presigned_post,
-        'url': 'https://%s.s3.amazonaws.com/%s' % (S3_BUCKET, file_name),
+        's3Data': presigned_post_data,
         'presigned_url': presigned_url
     })
 
