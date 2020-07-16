@@ -1,7 +1,5 @@
  window.presigned_url = null;
 
- console.log("index loaded");
-
 /*
   Function to carry out the actual POST request to S3 using the signed request from the Python app.
 */
@@ -54,22 +52,54 @@ function getSignedRequest(file){
   xhr.send();
 }
 
-/*
-   Function called when file input updated. If there is a file selected, then
-   start upload procedure by asking for a signed request from the app.
-*/
-function initUpload(){
+function setFormDataForFile() {
+
   const files = document.getElementById('file-input').files;
   const file = files[0];
-  if(!file){
-    return alert('No file selected.');
+
+  if (!file) {
+    return console.log('No file selected.');
   }
-  getSignedRequest(file);
+
+  // Set needed data on the form to be sent to the server
+  document.getElementById('filetype').value = file.type;
+  document.getElementById('filename').value = file.name;
+
+  window.somef = files;
+  console.log("HERE IS THE FILE", file);
+}
+
+
+
+function submitButtonEventListener(event) {
+  event.preventDefault();
+
+
+  const formElement = document.querySelector('#entry-submit-form');
+  const formData = new FormData(formElement);
+  const submitUrl = '/submit-form/';
+  const xhr = new XMLHttpRequest();
+
+  xhr.open('POST', submitUrl);
+  xhr.onreadystatechange = () => {
+    if (xhr.readyState === 4) {
+      if (xhr.status === 200) {
+        const response = JSON.parse(xhr.responseText);
+
+        console.log("HERE IS THE SUBMIT RESPONSE", response);
+      } else {
+        console.log("Something went wrong when trying to submit");
+      }
+    }
+  };
+
+  xhr.send(formData);
 }
 
 /*
    Bind listeners when the page loads.
 */
 (() => {
-  document.getElementById('file-input').onchange = initUpload;
+  document.querySelector('#file-input').onchange = setFormDataForFile;
+  document.querySelector('#entry-submit-button').addEventListener('click', submitButtonEventListener);
 })();

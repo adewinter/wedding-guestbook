@@ -16,38 +16,46 @@ def index():
     # Show the index HTML page:
     raw_entries = [dict(entry) for entry in dbops.get_all_entries()]
     entries = add_presigned_image_urls(raw_entries)
-    print("entries", entries)
     return render_template('index.html', entries=entries)
 
 
 def add_presigned_image_urls(entries):
     for entry in entries:
         entry['url'] = easy_generate_presigned_url(entry['s3_object_key'])
-    print("here are the entries", entries)
     return entries
 
-def generate_s3_object_key_from_name(name):
-    folder = slugify(name)
-    filename = uuid.uuid1()
-    return f"${folder}/${filename}"
+
+def generate_s3_object_key(person_name, filename):
+    folder = slugify(person_name)
+    _, file_extension = os.path.splitext(filename)
+    filename = f"{uuid.uuid1()}{file_extension}"
+    return f"{folder}/{filename}"
+
 
 # Listen for POST requests to yourdomain.com/submit_form/
 @bp.route("/submit-form/", methods=["POST"])
 def submit_form():
     # Collect the data posted from the HTML form in account.html:
-    name = request.form["name"]
+    person_name = request.form["person-name"]
     message = request.form["message"]
-    s3_object_key = generate_s3_object_key_from_name(name)
-
     filename = request.form["filename"]
+    filetype = request.form["filetype"]
+
+    print("This is the form", request.form)
+
+    if(filename == ''):
+        s3_object_key = ''
+    else:
+        s3_object_key = generate_s3_object_key(person_name, filename)
 
     # persist the important bits
-    dbops.insert_row(name, message, s3_object_key)
+    dbops.insert_row(person_name, message, filename, filetype, s3_object_key)
 
-
-
-    # Redirect to the user's profile page, if appropriate
-    return redirect(url_for('index'))
+    return json.dumps({
+        "person-name": person_name,
+        "message": message,
+        "s3_object_key": s3_object_key
+    })
 
 
 def list_s3_objects():
@@ -64,9 +72,6 @@ def generate_presigned_urls_for_all_objects():
     s3_keys = [s3_object["Key"] for s3_object in s3_objects]
     presigned_urls = [easy_generate_presigned_url(key) for key in s3_keys]
 
-    print("here are only the keys", s3_keys)
-    print("Here are the P urls", presigned_urls)
-
     return presigned_urls
 
 
@@ -77,6 +82,9 @@ def get_s3_objects():
 
 
 def easy_generate_presigned_url(key):
+    if not key:
+        return ''
+
     presigned_url = S3_CLIENT.generate_presigned_url(
         ClientMethod='get_object',
         Params={
@@ -108,8 +116,6 @@ def sign_s3():
     )
 
     presigned_url = easy_generate_presigned_url(file_name)
-
-    print("the presigned url is: ", presigned_url)
 
     # Return the data to the client
     return json.dumps({

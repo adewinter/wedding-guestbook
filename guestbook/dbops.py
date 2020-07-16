@@ -17,6 +17,8 @@ def create_table_if_needed():
         created_at timestamp not null default CURRENT_TIMESTAMP,
         name text,
         message text,
+        filename text,
+        filetype text,
         s3_object_key text
         );
         """
@@ -29,13 +31,15 @@ def create_table_if_needed():
     print("Done with create table")
 
 
-def insert_row(name, message, s3_object_key):
+def insert_row(name, message, filename, filetype, s3_object_key):
     with db_connection.cursor() as cursor:
         insert_query = """
           INSERT INTO guestbook VALUES
-            (DEFAULT, DEFAULT, %(name)s, %(message)s, %(s3_object_key)s);
+            (DEFAULT, DEFAULT, %(name)s, %(message)s, %(filename)s, %(filetype)s, %(s3_object_key)s);
         """
         cursor.execute(insert_query, {'name': name, 'message': message,
+                                      'filename': filename,
+                                      'filetype': filetype,
                                       's3_object_key': s3_object_key})
 
         result = cursor.statusmessage
