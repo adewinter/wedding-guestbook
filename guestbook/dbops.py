@@ -23,9 +23,6 @@ def create_table_if_needed():
         );
         """
         cursor.execute(table_query)
-        # db_connection.commit()
-
-        print("Closed cursor?")
 
         print("Cursor message:", cursor.statusmessage)
     print("Done with create table")
