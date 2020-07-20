@@ -195,7 +195,6 @@ function submitButtonEventListener(event) {
   xhr.onreadystatechange = () => {
     if (xhr.readyState === 4) {
       if (xhr.status === 200) {
-        state_machine.complete_message_submit();
         const response = JSON.parse(xhr.responseText);
 
         const file = getFile();
@@ -221,6 +220,27 @@ function submitButtonEventListener(event) {
   state_machine.submit_message();
   xhr.send(formData);
 }
+
+
+// This is a thing I found here: https://tympanus.net/codrops/2015/09/15/styling-customizing-file-inputs-smart-way/
+// It's for having the file select label (used instead of the browser styled input type="file" button)
+// indicate when a file is selected
+var inputs = document.querySelectorAll('#file-input');
+Array.prototype.forEach.call( inputs, function( input )
+{
+  const label  = input.nextElementSibling;
+
+  input.addEventListener( 'change', function( e )
+  {
+    var fileName = '';
+    if( !this.files || this.files.length == 0 ) {
+      label.innerHTML = 'Attach Media';
+    } else {
+      label.innerHTML = e.target.value.split('\\').pop();
+    }
+  });
+});
+
 
 /*
    Bind listeners when the page loads.

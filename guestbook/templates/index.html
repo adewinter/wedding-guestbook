@@ -1,7 +1,11 @@
 <html>
   <head>
+    <link rel="stylesheet" href="/static/css/bulma.min.css">
     <link rel="stylesheet" href="/static/css/spin.css">
     <link rel="stylesheet" href="/static/css/index.css">
+
+    <script src="https://kit.fontawesome.com/670b2b88b6.js" crossorigin="anonymous"></script>
+
   </head>
 
 
@@ -10,53 +14,87 @@
 
   <body>
     <div id="spinner"></div>
-    <h1>Guestbook</h1>
+    <section class="hero is-medium is-primary is-bold">
+      <div class="hero-body">
+        <div class="container">
+          <h1 class="title">
+            Welcome to Anton & Lauren's Guestbook!
+          </h1>
+          <h2 class="subtitle">
+            You can leave us a message and send us a picture or video!
+          </h2>
+        </div>
+      </div>
+    </section>
 
-    <hr>
+
+    <section class="section">
 
 
-    <section class="content">
-      <header>
-        Welcome to Anton and Lauren's Wedding Guestbook!
-      </header>
-      <hr />
-<!--       <pre>{{ entries }}</pre>
-      <hr />
- -->
-    <div id="add-entry">
-      <input type="file" id="file-input">
-      <p id="status">Please add your own message and image/video!</p>
+    <article class="media">
+      <figure class="media-left">
+        <p class="image is-64x64">
+          <i class="button fas fa-paperclip attach image"></i>
+        </p>
+        <input type="file" id="file-input" name="file-input" class="inputfile">
+        <label for="file-input" class="button is-light">Attach Media</label>
+      </figure>
+      <div class="media-content">
+        <div class="field">
+          <p class="control">
+            <form method="POST" id="entry-submit-form">
+              <input class="input input-name" type="text" name="person-name" placeholder="Name">
+              <textarea  name="message" class="textarea" placeholder="Write your message here..."></textarea>
+              <input type="hidden" id="filename" name="filename">
+              <input type="hidden" id="filetype" name="filetype">
+            </form>
+          </p>
+        </div>
+        <nav class="level">
+          <div class="level-left">
+            <div class="level-item">
+              <a class="button is-info" id="entry-submit-button">Submit</a>
+            </div>
+          </div>
+          <div class="level-right">
+          </div>
+        </nav>
+      </div>
+    </article>
+  </section>
 
-      <form method="POST" id="entry-submit-form">
-        <input type="hidden" id="filename" name="filename">
-        <input type="hidden" id="filetype" name="filetype">
-        <input type="text" name="person-name" placeholder="name">
-        <textarea name="message" placeholder="Write your message here"></textarea>
-        <input type="submit" id="entry-submit-button" value="Submit">
-    </form>
-    <hr />
-    </div>
-    <div class="entries">
+  <section class="section">
+    <div class="entrie s container">
       {% for entry in entries %}
-        <div class="entry card">
-          <div class="entry-name">
-            <div class="entry-name-header">Name: <span class="entry-name-value">{{ entry.name }}</span></div>
-          </div>
-          <div class="entry-message">
-            <div class="entry-message-header">Message: <span class="entry-message-value">{{ entry.message }}</span></div>
-          </div>
+      <div class="tile is-vertical">
+        <div class="card">
           {% if entry.url %}
-          <div class="entry-image">
-            <img src="{{ entry.url }}" />
-            }
+          <div class="card-image">
+            <figure class="image is-4by3">
+              <!-- <img src="https://bulma.io/images/placeholders/1280x960.png" alt="Placeholder image"> -->
+              <img src="{{ entry.url }}" alt="Image from entry"/>
+            </figure>
           </div>
           {% endif %}
-          <pre>{{ entry }}</pre>
+          <div class="card-content">
+            <div class="media">
+              <div class="media-content">
+                <p class="title is-4">{{ entry.name }}</p>
+              </div>
+            </div>
+
+            <div class="content">
+              {{ entry.message }}
+              <br>
+              <time datetime="2016-1-1">11:09 PM - 1 Jan 2016</time>
+            </div>
+          </div>
         </div>
+      </div>
+      <br>
       {% endfor %}
-    </div>
-    
-    </section>
+    </div>  
+  </section>
 
     <script type="text/javascript" src="/static/js/Stately.js"></script>
     <script type="text/javascript" src="/static/js/spin.js"></script>
