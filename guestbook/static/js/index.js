@@ -49,7 +49,6 @@ function submit_message_transition () {
 }
 
 function submit_file_transition() {
-  stop_spinner();
   return 'FILE_SUBMITTING';
 }
 
@@ -246,6 +245,7 @@ Array.prototype.forEach.call( inputs, function( input )
    Bind listeners when the page loads.
 */
 (() => {
+  document.querySelector('#paperclip-button-container').addEventListener('click', () => { document.querySelector('#attach-media-button').click() });
   document.querySelector('#file-input').onchange = setFormDataForFile;
   document.querySelector('#entry-submit-button').addEventListener('click', submitButtonEventListener);
 })();

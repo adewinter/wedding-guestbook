@@ -1,43 +1,6 @@
-/*.entry {
-    display: flex;
-}
-.entry.card {
+#paperclip-button-container {
     margin-bottom: 10px;
 }
-
-.entry-name {
-    border: 3px solid black;
-    border-radius: 5px;
-}
-
-.entry-message { 
-    border: 3px solid black;
-    border-radius: 5px;
-}
-
-.entry-image { 
-    border: 3px solid black;
-    border-radius: 5px;
-}
-
-.entry-name-header {
-    font-weight: bold;
-}
-
-.entry-name-value {
-    font-weight: normal;
-}
-
-
-.entry-image {
-    width: 100%;
-}
-
-.image-thumbnail {
-    width: 320px;
-}
-*/
-
 
 .media-left > .image > i {
     font-size: 45;
@@ -47,9 +10,6 @@
     border: 1px solid grey;
     background-color: #f5f5f5;
     margin-bottom: 10px;
-}
-.media-left button {
-    margin-top: 10px;
 }
 
 .media-left {
