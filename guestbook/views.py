@@ -4,8 +4,9 @@ import uuid
 
 from flask import render_template, request, redirect, url_for, Blueprint
 from slugify import slugify
+import requests
 
-from guestbook import dbops, S3_BUCKET, S3_CLIENT
+from guestbook import dbops, S3_BUCKET, S3_CLIENT, CLOUDFLARE_API_KEY, CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_EMAIL
 
 bp = Blueprint("guestbook", __name__)
 
@@ -125,6 +126,45 @@ def sign_s3():
         'presigned_url': presigned_url
     })
 
+@bp.route('/prep-for-streaming/', methods=["POST"])
+def prep_for_streaming():
+    # Load required data from the request
+    presigned_url = request.form['presigned_url']
+    s3_object_key = request.form['s3_object_key']
+
+    cloudflare_payload = {
+        'url': presigned_url,
+        'meta': {
+            'name': s3_object_key
+        }
+    }
+
+    request_url = f"https://api.cloudflare.com/client/v4/accounts/{CLOUDFLARE_ACCOUNT_ID}/stream/copy"
+    request_headers = {
+        'X-Auth-Key': CLOUDFLARE_API_KEY,
+        'X-Auth-Email': CLOUDFLARE_EMAIL
+    }
+
+    r = requests.post(request_url, json=cloudflare_payload, headers=request_headers)
+    r.raise_for_status()
+
+    response = r.json()
+
+    thumbnail_url = response['result']['thumbnail']
+    cloudflare_uid = response['result']['uid']
+    cloudflare_status_json = response['result']['status']
+    cloudflare_status = json.dumps(cloudflare_status_json)
+    
+    dbops.update_cloudflare_status(s3_object_key,
+                                   thumbnail_url,
+                                   cloudflare_uid,
+                                   cloudflare_status)
+    
+    return json.dumps({
+        'thumbnail': thumbnail_url,
+        'uid': cloudflare_uid,
+        'status': cloudflare_status_json
+    })
 
 def startup_init():
     print("Doing initial setup tasks")

@@ -15,6 +15,10 @@ S3_CLIENT = boto3.client('s3',
                          aws_secret_access_key=SECRET_KEY)
 DATABSE_URL = os.getenv('DATABASE_URL')
 
+CLOUDFLARE_API_KEY = os.getenv('CLOUDFLARE_API_KEY')
+CLOUDFLARE_ACCOUNT_ID = os.getenv('CLOUDFLARE_ACCOUNT_ID')
+CLOUDFLARE_EMAIL = os.getenv('CLOUDFLARE_EMAIL')
+
 
 def create_app(test_config=None):
     """Create and configure an instance of the Flask application."""
@@ -30,7 +34,7 @@ def create_app(test_config=None):
     )
 
     app.url_map.strict_slashes = False
-    
+
     if test_config is None:
         # load the instance config, if it exists, when not testing
         app.config.from_pyfile("config.py", silent=True)

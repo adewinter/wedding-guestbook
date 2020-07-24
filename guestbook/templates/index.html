@@ -71,13 +71,21 @@
       {% for entry in entries %}
       <div class="tile is-vertical">
         <div class="card">
-          {% if entry.url %}
+          {% if 'image/' in entry.filetype and entry.url %}
+          <h1>Image:: {{ entry.filetype }}</h1>
           <div class="card-image">
-            <figure class="image is-4by3">
-              <!-- <img src="https://bulma.io/images/placeholders/1280x960.png" alt="Placeholder image"> -->
+            <figure class="image">
               <img src="{{ entry.url }}" alt="Image from entry"/>
             </figure>
           </div>
+          {% endif %}
+          {% if entry.thumbnail_url %}
+            <h1>Video:: {{ entry.filetype }}</h1>
+            <div class="card-image">
+              <figure class="image">
+                <img src="{{ entry.thumbnail_url }}" alt="Thumbnail from video"/>
+              </figure>
+            </div>
           {% endif %}
           <div class="card-content">
             <div class="media">
@@ -87,9 +95,10 @@
             </div>
 
             <div class="content">
-              {{ entry.message }}
+              <blockquote>{{ entry.message }}</blockquote>
               <br>
-              <time datetime="2016-1-1">11:09 PM - 1 Jan 2016</time>
+              <pre> {{ entry }}</pre>
+              <time datetime="{{ entry.created_at.strftime('%m/%d/%Y') }}">Created on: {{ entry.created_at.strftime("%m/%d/%Y, %H:%M:%S") }}</time>
             </div>
           </div>
         </div>

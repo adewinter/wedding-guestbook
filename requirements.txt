@@ -16,3 +16,4 @@ python-dotenv
 gunicorn
 psycopg2
 python-slugify
+requests

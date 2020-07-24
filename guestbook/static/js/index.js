@@ -80,22 +80,53 @@ const state_machine = new Stately({
   'FILE_SUBMITTING': {
     onEnter: reporter,
     finalize_submit: finalize_submit_transition,
+    abort_submit: abort_submission_transition,
+    trigger_stream_prep: 'STREAM_PREP_TRIGGERING'
+  },
+  'STREAM_PREP_TRIGGERING': {
+    onEnter: reporter,
+    finalize_submit: finalize_submit_transition,
     abort_submit: abort_submission_transition
   }
 })
 
+function triggerStreamingPrep(signedResponseData) {
+  const presigned_url = signedResponseData.presigned_url;
+  const s3_object_key = signedResponseData.s3Data.fields.key;
+  const url = `/prep-for-streaming/`;
+  const postData = new FormData();
+  postData.append('presigned_url', presigned_url);
+  postData.append('s3_object_key', s3_object_key);
+
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', url);
+  xhr.onreadystatechange = () => {
+    if(xhr.readyState === 4){
+      if(xhr.status === 200){
+        const response = JSON.parse(xhr.responseText);
+        const thumbnail = response.thumbnail;
+        console.log("HERE IS THE THUMBNAIL URL", thumbnail);
+        console.log("HERE IS THE FULL RESPONSE", response);
+        state_machine.finalize_submit();
+      }
+    }
+  }
 
 
+  xhr.addEventListener('error', (e) => {
+    XHR_ERROR_MESSAGE = e;
+    state_machine.abort_submit();
+  });
 
-
-
-window.presigned_url = null;
+  xhr.send(postData);
+}
 
 
 /*
   Function to carry out the actual POST request to S3 using the signed request from the Python app.
 */
-function uploadFile(file, s3Data){
+function uploadFile(file, signedResponseData){
+  const s3Data = signedResponseData.s3Data;
   const xhr = new XMLHttpRequest();
   xhr.open('POST', s3Data.url);
   xhr.setRequestHeader('x-amz-acl', 'public-read');
@@ -110,7 +141,12 @@ function uploadFile(file, s3Data){
     if(xhr.readyState === 4){
       if(xhr.status === 200 || xhr.status === 204){
         console.log("Upload complete for file! object key:", s3Data.fields.key)
-        state_machine.finalize_submit();
+        if (file.type.indexOf('video/') !== -1) {
+          state_machine.trigger_stream_prep();
+          triggerStreamingPrep(signedResponseData);
+        } else {
+          state_machine.finalize_submit();
+        }
       }
       else{
         state_machine.abort_submit();
@@ -140,8 +176,7 @@ function getSignedRequestAndUploadFile(key, file){
     if(xhr.readyState === 4){
       if(xhr.status === 200){
         const response = JSON.parse(xhr.responseText);
-        window.presigned_url = response.presigned_url;
-        uploadFile(file, response.s3Data);
+        uploadFile(file, response);
       }
       else{
         alert('Could not get signed URL.');
