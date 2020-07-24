@@ -50,3 +50,17 @@ div.card.entry {
 div.card-image > figure > stream > div {
     height: unset !important;
 }
+
+#attach-media-button {
+    width: 100%;
+}
+
+#attach-media-button span {
+    text-overflow: ellipsis;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+figure.media-left {
+    max-width: 30%;
+}

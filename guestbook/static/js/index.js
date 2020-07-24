@@ -92,6 +92,7 @@ function finalize_file_submit_transition () {
   stop_spinner();
   hide_progress();
   enable_submit_button();
+  update_label_success();
   return 'INITIAL_LOAD';
 }
 
@@ -101,6 +102,11 @@ function abort_submission_transition () {
   stop_spinner();
   hide_progress();
   return 'INITIAL_LOAD';
+}
+
+
+function update_label_success() {
+  document.querySelector('#attach-media-button').innerHTML = "<span>✔️</span>";
 }
 
 
@@ -146,8 +152,7 @@ function triggerStreamingPrep(signedResponseData) {
         const cloudflare_uid = response.uid;
         document.querySelector('#cloudflare-uid').value = cloudflare_uid;
         document.querySelector('#thumbnail-url').value = thumbnail_url;
-        console.log("HERE IS THE THUMBNAIL URL", thumbnail_url);
-        console.log("HERE IS THE FULL RESPONSE", response);
+
         state_machine.finalize_submit();
       }
     }
@@ -168,7 +173,7 @@ function clear_form() {
     element.value = '';
   }
 
-  document.querySelector('#attach-media-button').innerHTML = 'Attach Media';
+  document.querySelector('#attach-media-button > span').innerHTML = 'Attach Media';
   document.querySelector('#file-input').value = '';
   document.querySelector('#paperclip-button-container').style.display = '';
 }
