@@ -37,6 +37,7 @@ function reporter(event, oldState, newState) {
 
 function start_spinner() {
   spinner.spin(SPINNER_TARGET);
+  document.querySelector('#paperclip-button-container').style.display = 'none';
 }
 
 function stop_spinner() {
@@ -63,9 +64,19 @@ function submit_message_transition () {
   return 'MESSAGE_SUBMITTING'
 }
 
+function disable_submit_button() {
+  document.querySelector('#entry-submit-button').setAttribute('disabled', true);
+}
+
+function enable_submit_button() {
+  document.querySelector('#entry-submit-button').removeAttribute('disabled');
+}
+
 function submit_file_transition() {
   start_spinner();
   show_progress();
+  disable_submit_button();
+
   return 'FILE_SUBMITTING';
 }
 
@@ -73,12 +84,14 @@ function finalize_submit_transition () {
   stop_spinner();
   hide_progress();
   clear_form();
+  window.location.reload();
   return 'INITIAL_LOAD';
 }
 
 function finalize_file_submit_transition () {
   stop_spinner();
   hide_progress();
+  enable_submit_button();
   return 'INITIAL_LOAD';
 }
 
@@ -155,8 +168,9 @@ function clear_form() {
     element.value = '';
   }
 
-  document.querySelector('#attach-media-button').value = 'Attach Media';
+  document.querySelector('#attach-media-button').innerHTML = 'Attach Media';
   document.querySelector('#file-input').value = '';
+  document.querySelector('#paperclip-button-container').style.display = '';
 }
 
 function progressHandler(event) {

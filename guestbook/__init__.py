@@ -13,7 +13,7 @@ S3_BUCKET = os.getenv('S3_BUCKET')
 S3_CLIENT = boto3.client('s3',
                          aws_access_key_id=ACCESS_KEY,
                          aws_secret_access_key=SECRET_KEY)
-DATABSE_URL = os.getenv('DATABASE_URL')
+DATABASE_URL = os.getenv('DATABASE_URL')
 
 CLOUDFLARE_API_KEY = os.getenv('CLOUDFLARE_API_KEY')
 CLOUDFLARE_ACCOUNT_ID = os.getenv('CLOUDFLARE_ACCOUNT_ID')
@@ -23,9 +23,10 @@ CLOUDFLARE_EMAIL = os.getenv('CLOUDFLARE_EMAIL')
 def create_app(test_config=None):
     """Create and configure an instance of the Flask application."""
     print("In create app...")
-    dbops.create_table_if_needed()
 
     app = Flask(__name__, instance_relative_config=True)
+    dbops.init_app(app, DATABASE_URL)
+    dbops.create_table_if_needed()
     app.config.from_mapping(
         # a default secret that should be overridden by instance config
         SECRET_KEY="dev",

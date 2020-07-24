@@ -62,7 +62,7 @@
         <nav class="level">
           <div class="level-left">
             <div class="level-item">
-              <a class="button is-info" id="entry-submit-button">Submit</a>
+              <button class="button is-info" id="entry-submit-button">Submit</button>
             </div>
           </div>
           <div class="level-right">
@@ -74,44 +74,51 @@
 
   <section class="section">
     <div class="entries container">
-      {% for entry in entries|reverse %}
-      <div class="tile is-vertical">
-        <div class="card">
-          {% if 'image/' in entry.filetype and entry.url %}
-          <h1>Image:</h1>
-          <div class="card-image">
-            <figure class="image">
-              <img src="{{ entry.url }}" alt="Image from entry"/>
-            </figure>
-          </div>
-          {% endif %}
-          {% if entry.thumbnail_url %}
-            <h1>Video</h1>
-            <div class="card-image">
-              <figure class="image">
-                <stream src="{{ entry.cloudflare_uid }}" preload controls width="100%"></stream>
-<script data-cfasync="false" defer type="text/javascript" src="https://embed.cloudflarestream.com/embed/r4xu.fla9.latest.js?video={{ entry.cloudflare_uid }}"></script>
-              </figure>
-            </div>
-          {% endif %}
-          <div class="card-content">
-            <div class="media">
-              <div class="media-content">
-                <p class="title is-4">{{ entry.name }}</p>
-              </div>
-            </div>
+      <div class="tile is-ancestor is-vertical">
+            
+        {% for row in entries|reverse|batch(3) %}
+          <div class="tile is-parent is-12">
+            {% for entry in row %}
+              <div class="tile is-child is-4">
+                <div class="card entry">
+                  {% if 'image/' in entry.filetype and entry.url %}
+                    <h1>Image:</h1>
+                    <div class="card-image">
+                      <figure class="image">
+                        <img src="{{ entry.url }}" alt="Image from entry"/>
+                      </figure>
+                    </div>
+                  {% endif %}
+                  {% if entry.thumbnail_url %}
+                    <h1>Video</h1>
+                    <div class="card-image">
+                      <figure class="image">
+                        <stream src="{{ entry.cloudflare_uid }}" preload controls></stream>
+                      <script data-cfasync="false" defer type="text/javascript" src="https://embed.cloudflarestream.com/embed/r4xu.fla9.latest.js?video={{ entry.cloudflare_uid }}"></script>
+                      </figure>
+                    </div>
+                  {% endif %}
+                  <div class="card-content">
+                    <div class="media">
+                      <div class="media-content">
+                        <p class="title is-4">{{ entry.name }}</p>
+                      </div>
+                    </div>
 
-            <div class="content">
-              <blockquote>{{ entry.message }}</blockquote>
-              <br>
-              <!-- <pre> {{ entry }}</pre> -->
-              <time datetime="{{ entry.created_at.strftime('%m/%d/%Y') }}">Created on: {{ entry.created_at.strftime("%m/%d/%Y, %H:%M:%S") }}</time>
-            </div>
+                    <div class="content">
+                      <blockquote>{{ entry.message }}</blockquote>
+                      <br>
+                      <!-- <pre> {{ entry }}</pre> -->
+                      <time datetime="{{ entry.created_at.strftime('%m/%d/%Y') }}">Created on: {{ entry.created_at.strftime("%m/%d/%Y, %H:%M:%S") }}</time>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
           </div>
-        </div>
+        {% endfor %}
+            
       </div>
-      <br>
-      {% endfor %}
     </div>  
   </section>
 
