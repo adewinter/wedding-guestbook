@@ -32,6 +32,20 @@ def generate_s3_object_key(person_name, filename):
     filename = f"{uuid.uuid1()}{file_extension}"
     return f"{folder}/{filename}"
 
+@bp.route("/generate_s3_object_key/", methods=["POST"])
+def generate_s3_object_key_route():
+    filename = request.form["filename"];
+    filetype = request.form["filetype"];
+
+    if(filename == ''):
+        s3_object_key = ''
+    else:
+        s3_object_key = generate_s3_object_key('uploads', filename)
+
+    return json.dumps({
+        "s3_object_key": s3_object_key
+    });
+
 
 # Listen for POST requests to yourdomain.com/submit_form/
 @bp.route("/submit-form/", methods=["POST"])
@@ -41,23 +55,25 @@ def submit_form():
     message = request.form["message"]
     filename = request.form["filename"]
     filetype = request.form["filetype"]
+    s3_object_key = request.form["s3-object-key"];
+    thumbnail_url = request.form["thumbnail-url"];
+    cloudflare_uid = request.form["cloudflare-uid"];
 
     print("This is the form", request.form)
 
-    if(filename == ''):
-        s3_object_key = ''
-    else:
-        s3_object_key = generate_s3_object_key(person_name, filename)
+
 
     # persist the important bits
-    dbops.insert_row(person_name, message, filename, filetype, s3_object_key)
+    dbops.insert_row(person_name, message, filename, filetype, s3_object_key, thumbnail_url, cloudflare_uid)
 
     return json.dumps({
         "person-name": person_name,
         "message": message,
         "old_filename": filename,
         "filetype": filetype,
-        "s3_object_key": s3_object_key
+        "s3_object_key": s3_object_key,
+        "thumbnail_url": thumbnail_url,
+        "cloudflare-uid": cloudflare_uid
     })
 
 

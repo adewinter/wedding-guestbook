@@ -31,16 +31,18 @@ def create_table_if_needed():
     print("Done with create table")
 
 
-def insert_row(name, message, filename, filetype, s3_object_key):
+def insert_row(name, message, filename, filetype, s3_object_key, thumbnail_url='', cloudflare_uid=''):
     with db_connection.cursor() as cursor:
         insert_query = """
           INSERT INTO guestbook VALUES
-            (DEFAULT, DEFAULT, %(name)s, %(message)s, %(filename)s, %(filetype)s, %(s3_object_key)s, '', '', '');
+            (DEFAULT, DEFAULT, %(name)s, %(message)s, %(filename)s, %(filetype)s, %(s3_object_key)s, %(thumbnail_url)s, %(cloudflare_uid)s, '');
         """
         cursor.execute(insert_query, {'name': name, 'message': message,
                                       'filename': filename,
                                       'filetype': filetype,
-                                      's3_object_key': s3_object_key})
+                                      's3_object_key': s3_object_key,
+                                      'thumbnail_url': thumbnail_url,
+                                      'cloudflare_uid': cloudflare_uid})
 
         result = cursor.statusmessage
 

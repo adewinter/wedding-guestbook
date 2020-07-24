@@ -16,7 +16,6 @@
 
 
   <body>
-    <div id="spinner"></div>
     <section class="hero is-medium is-primary is-bold">
       <div class="hero-body">
         <div class="container">
@@ -36,11 +35,15 @@
 
     <article class="media">
       <figure class="media-left">
+        <div id="spinner-container"></div>
         <p class="image is-64x64" id="paperclip-button-container">
           <i class="button fas fa-paperclip attach image" id="paperclip-button"></i>
         </p>
         <input type="file" id="file-input" name="file-input" class="inputfile" accept="image/*, video/*">
         <label for="file-input" class="button is-light" id="attach-media-button">Attach Media</label>
+        <div id="progress-bar">
+          <progress max="100" value="0" id="current-value"></progress>
+        </div>
       </figure>
       <div class="media-content">
         <div class="field">
@@ -50,6 +53,9 @@
               <textarea  name="message" class="textarea" placeholder="Write your message here..."></textarea>
               <input type="hidden" id="filename" name="filename">
               <input type="hidden" id="filetype" name="filetype">
+              <input type="hidden" id="s3-object-key" name="s3-object-key">
+              <input type="hidden" id="thumbnail-url" name="thumbnail-url">
+              <input type="hidden" id="cloudflare-uid" name="cloudflare-uid">
             </form>
           </p>
         </div>
@@ -67,12 +73,12 @@
   </section>
 
   <section class="section">
-    <div class="entrie s container">
-      {% for entry in entries %}
+    <div class="entries container">
+      {% for entry in entries|reverse %}
       <div class="tile is-vertical">
         <div class="card">
           {% if 'image/' in entry.filetype and entry.url %}
-          <h1>Image:: {{ entry.filetype }}</h1>
+          <h1>Image:</h1>
           <div class="card-image">
             <figure class="image">
               <img src="{{ entry.url }}" alt="Image from entry"/>
@@ -80,10 +86,11 @@
           </div>
           {% endif %}
           {% if entry.thumbnail_url %}
-            <h1>Video:: {{ entry.filetype }}</h1>
+            <h1>Video</h1>
             <div class="card-image">
               <figure class="image">
-                <img src="{{ entry.thumbnail_url }}" alt="Thumbnail from video"/>
+                <stream src="{{ entry.cloudflare_uid }}" preload controls width="100%"></stream>
+<script data-cfasync="false" defer type="text/javascript" src="https://embed.cloudflarestream.com/embed/r4xu.fla9.latest.js?video={{ entry.cloudflare_uid }}"></script>
               </figure>
             </div>
           {% endif %}
@@ -97,7 +104,7 @@
             <div class="content">
               <blockquote>{{ entry.message }}</blockquote>
               <br>
-              <pre> {{ entry }}</pre>
+              <!-- <pre> {{ entry }}</pre> -->
               <time datetime="{{ entry.created_at.strftime('%m/%d/%Y') }}">Created on: {{ entry.created_at.strftime("%m/%d/%Y, %H:%M:%S") }}</time>
             </div>
           </div>

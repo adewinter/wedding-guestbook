@@ -30,3 +30,15 @@
     position: absolute;
     z-index: -1;
 }
+
+#spinner-container {
+    /*width: 1px;*/
+    /*height: 5px;*/
+    /*border: 1px solid black;*/
+    /*margin-top: 10px;*/
+}
+
+#progress-bar {
+    margin-top: 10px;
+    display: none;
+}
