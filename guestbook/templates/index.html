@@ -82,15 +82,20 @@
               <div class="tile is-child is-4">
                 <div class="card entry">
                   {% if 'image/' in entry.filetype and entry.url %}
-                    <h1>Image:</h1>
                     <div class="card-image">
                       <figure class="image">
                         <img src="{{ entry.url }}" alt="Image from entry"/>
                       </figure>
                     </div>
                   {% endif %}
-                  {% if entry.thumbnail_url %}
-                    <h1>Video</h1>
+                  {% if entry.thumbnail_url and not entry.ready_to_stream %}
+                    <div class="card-image">
+                      <figure class="image">
+                        <p class="title">Video is still processing! Come back in a few minutes to watch your upload</p>
+                      </figure>
+                    </div>
+                  {% endif %}
+                  {% if entry.thumbnail_url and entry.ready_to_stream %}
                     <div class="card-image">
                       <figure class="image">
                         <stream src="{{ entry.cloudflare_uid }}" preload controls></stream>

@@ -48,7 +48,8 @@ def create_table_if_needed():
         s3_object_key text,
         thumbnail_url text,
         cloudflare_uid text,
-        cloudflare_status text
+        cloudflare_status text,
+        ready_to_stream text
         );
         """
         cursor.execute(table_query)
@@ -57,7 +58,7 @@ def create_table_if_needed():
     print("Done with create table")
 
 
-def insert_row(name, message, filename, filetype, s3_object_key, thumbnail_url='', cloudflare_uid=''):
+def insert_row(name, message, filename, filetype, s3_object_key, thumbnail_url='', cloudflare_uid='', ready_to_stream=''):
     with get_db().cursor() as cursor:
         insert_query = """
           INSERT INTO guestbook VALUES
@@ -74,19 +75,34 @@ def insert_row(name, message, filename, filetype, s3_object_key, thumbnail_url='
 
     return result
 
-def update_cloudflare_status(s3_object_key, thumbnail_url, cloudflare_uid, cloudflare_status):
+def update_cloudflare_status(s3_object_key, thumbnail_url, cloudflare_uid, cloudflare_status, ready_to_stream=''):
     with get_db().cursor() as cursor:
         update_query = """
             UPDATE guestbook
                 SET thumbnail_url = %(thumbnail_url)s,
                     cloudflare_status = %(cloudflare_status)s,
-                    cloudflare_uid = %(cloudflare_uid)s
+                    cloudflare_uid = %(cloudflare_uid)s,
+                    ready_to_stream = %(ready_to_stream)s
                 WHERE s3_object_key = %(s3_object_key)s;
         """
         cursor.execute(update_query, {'s3_object_key': s3_object_key,
                                       'cloudflare_uid': cloudflare_uid, 
                                       'thumbnail_url': thumbnail_url,
-                                      'cloudflare_status': cloudflare_status})
+                                      'cloudflare_status': cloudflare_status,
+                                      'ready_to_stream': ready_to_stream})
+        result = cursor.statusmessage
+
+    return result
+
+def update_readytostream_status(s3_object_key, cloudflare_uid, ready_to_stream_status):
+    with get_db().cursor() as cursor:
+        update_query = """
+            UPDATE guestbook
+                SET ready_to_stream = %(ready_to_stream_status)s
+                WHERE s3_object_key = %(s3_object_key)s;
+        """
+        cursor.execute(update_query, {'s3_object_key': s3_object_key,
+                                      'ready_to_stream_status': ready_to_stream_status})
         result = cursor.statusmessage
 
     return result

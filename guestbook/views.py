@@ -16,7 +16,8 @@ bp = Blueprint("guestbook", __name__)
 def index():
     # Show the index HTML page:
     raw_entries = [dict(entry) for entry in dbops.get_all_entries()]
-    entries = add_presigned_image_urls(raw_entries)
+    presigned_entries = add_presigned_image_urls(raw_entries)
+    entries = validate_readytostream_status(presigned_entries)
     return render_template('index.html', entries=entries)
 
 
@@ -142,6 +143,33 @@ def sign_s3():
         'presigned_url': presigned_url
     })
 
+def check_readytostream_status(s3_object_key, uid):
+    request_url = f"https://api.cloudflare.com/client/v4/accounts/{CLOUDFLARE_ACCOUNT_ID}/media/{uid}"
+    request_headers = {
+        'X-Auth-Key': CLOUDFLARE_API_KEY,
+        'X-Auth-Email': CLOUDFLARE_EMAIL,
+        'Content-Type': 'application/json'
+    }
+    r = requests.get(request_url, headers=request_headers)
+    
+    r.raise_for_status()
+    response = r.json()
+    ready_to_stream = response['result']['readyToStream']
+
+    dbops.update_readytostream_status(s3_object_key, uid, ready_to_stream)
+    return ready_to_stream
+
+def validate_readytostream_status(entries):
+    for entry in entries:
+        cloudflare_uid = entry['cloudflare_uid']
+        ready_to_stream = entry['ready_to_stream']
+        s3_object_key = entry['s3_object_key']
+
+        if cloudflare_uid and not ready_to_stream:
+            entry['ready_to_stream'] = check_readytostream_status(s3_object_key, cloudflare_uid)
+
+    return entries
+
 @bp.route('/prep-for-streaming/', methods=["POST"])
 def prep_for_streaming():
     # Load required data from the request
@@ -150,6 +178,7 @@ def prep_for_streaming():
 
     cloudflare_payload = {
         'url': presigned_url,
+        'thumbnailTimestampPct': 0.4,
         'meta': {
             'name': s3_object_key
         }
