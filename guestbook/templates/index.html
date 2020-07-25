@@ -84,7 +84,7 @@
                   {% if 'image/' in entry.filetype and entry.url %}
                     <div class="card-image">
                       <figure class="image">
-                        <img src="{{ entry.url }}" alt="Image from entry"/>
+                        <img src="{{ entry.url }}" loading="lazy" alt="Image from entry"/>
                       </figure>
                     </div>
                   {% endif %}
