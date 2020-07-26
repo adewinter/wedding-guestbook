@@ -73,7 +73,7 @@ section hero.is-primary.is-bold {
 
 }
 
-section hero.is-medium.is-primary.is-bold {
+section .hero.is-medium.is-primary.is-bold {
     background-image: url('https://media-api.xogrp.com/images/5ae35e23-a259-46f2-9a5a-f280ea1c5bc8~rt_auto-rs_1024.h?ordering=explicit');
     background-repeat: no-repeat;
     background-size: 100%;
