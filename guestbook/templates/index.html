@@ -6,7 +6,6 @@
     <link rel="stylesheet" href="/static/css/bulma.min.css">
     <link rel="stylesheet" href="/static/css/spin.css">
     <link rel="stylesheet" href="/static/css/index.css">
-    <link rel="stylesheet" href="/static/css/font.css">
 
     <script src="https://kit.fontawesome.com/670b2b88b6.js" crossorigin="anonymous"></script>
 
@@ -17,9 +16,9 @@
 
 
   <body>
-    <section class="hero is-medium is-primary is-bold someheader">
+    <section class="hero is-medium is-primary is-bold">
       <div class="hero-body">
-        <div class="container has-text-centered">
+        <div class="container">
           <h1 class="title">
             Welcome to Anton & Lauren's Guestbook!
           </h1>
@@ -84,8 +83,8 @@
                 <div class="card entry">
                   {% if 'image/' in entry.filetype and entry.url %}
                     <div class="card-image">
-                      <figure class="image">
-                        <img src="{{ entry.url }}" loading="lazy" alt="Image from entry"/>
+                      <figure class="image is-4by3">
+                        <a href="{{ entry.url }}"><img src="{{ entry.url }}" class="has-ratio" width="640" alt="Image from entry"/></a>
                       </figure>
                     </div>
                   {% endif %}
@@ -98,12 +97,19 @@
                   {% endif %}
                   {% if entry.thumbnail_url and entry.ready_to_stream %}
                     <div class="card-image">
-                      <figure class="image">
-                        <stream src="{{ entry.cloudflare_uid }}" preload controls></stream>
+                      <figure class="image is-4by3">
+                        <stream src="{{ entry.cloudflare_uid }}" class="has-ratio" height="100%" preload controls></stream>
                       <script data-cfasync="false" defer type="text/javascript" src="https://embed.cloudflarestream.com/embed/r4xu.fla9.latest.js?video={{ entry.cloudflare_uid }}"></script>
                       </figure>
                     </div>
                   {% endif %}
+                  {% if not ('image/' in entry.filetype) and not entry.url %}
+                    <div class="card-image">
+                      <figure class="image">
+                        <img src="/static/media/placeholder.png" loading="lazy" alt="Placeholder image for message without other media" />
+                      </figure>
+                    </div>
+                    {% endif %}
                   <div class="card-content">
                     <div class="media">
                       <div class="media-content">
