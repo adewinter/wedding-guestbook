@@ -48,7 +48,7 @@ div.card.entry {
 }
 
 div.card-image > figure > stream > div {
-    height: unset !important;
+    /*height: unset !important;*/
 }
 
 #attach-media-button {
@@ -74,4 +74,9 @@ body {
     background-repeat: no-repeat;
     background-size: 100%;
     background-color: transparent;    
+}
+
+div.card-image figure.image.is-4by3 a img {
+    width: auto;
+    margin: auto;
 }
